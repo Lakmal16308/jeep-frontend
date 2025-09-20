@@ -19,6 +19,7 @@ function Signup() {
     photos: []
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const categories = [
@@ -38,13 +39,20 @@ function Signup() {
     } else {
       setFormData({ ...formData, [name]: value });
     }
+    setError(null); // Clear error on input change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
+      // Validate password length
+      if (formData.password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+      }
+
       const endpoint = formData.role === 'tourist' ? '/api/auth/tourist/signup' : '/api/auth/provider/signup';
       const headers = formData.role === 'tourist' ? { 'Content-Type': 'application/json' } : { 'Content-Type': 'multipart/form-data' };
       let data;
@@ -57,6 +65,15 @@ function Signup() {
           country: formData.country
         };
       } else {
+        if (!formData.profilePicture || formData.photos.length === 0) {
+          throw new Error('Profile picture and at least one photo are required for providers');
+        }
+        if (!categories.includes(formData.category)) {
+          throw new Error('Invalid category selected');
+        }
+        if (Number(formData.price) <= 0) {
+          throw new Error('Price must be a positive number');
+        }
         data = new FormData();
         data.append('role', formData.role);
         data.append('fullName', formData.fullName);
@@ -77,24 +94,30 @@ function Signup() {
       const formDataEntries = formData.role === 'tourist' 
         ? data 
         : Object.fromEntries([...data.entries()].map(([key, value]) => [key, value instanceof File ? value.name : value]));
-      console.log('Sending signup request:', JSON.stringify(formDataEntries, null, 2));
+      console.log(`[${new Date().toISOString()}] Sending signup request:`, JSON.stringify(formDataEntries, null, 2));
 
       const apiUrl = process.env.REACT_APP_API_URL || 'https://jeep-ten.vercel.app';
       const cleanApiUrl = apiUrl.replace(/\/+$/, '');
       const res = await axios.post(`${cleanApiUrl}${endpoint}`, data, { headers });
-      console.log('Signup response:', JSON.stringify(res.data, null, 2));
+      console.log(`[${new Date().toISOString()}] Signup response:`, JSON.stringify(res.data, null, 2));
+
       localStorage.setItem('token', res.data.token);
       navigate(formData.role === 'tourist' ? '/tourist-dashboard' : '/provider-dashboard');
     } catch (err) {
-      console.error('Signup error:', err.response?.data || err.message);
-      alert('Error signing up: ' + (err.response?.data?.error || err.message));
+      console.error(`[${new Date().toISOString()}] Signup error:`, {
+        message: err.message,
+        response: err.response?.data
+      });
+      setError(err.response?.data?.error || err.message || 'Failed to sign up. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
     <div className="form-container container">
       <h2>Sign Up</h2>
+      {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Role</label>
@@ -112,7 +135,7 @@ function Signup() {
           <input type="email" name="email" value={formData.email} onChange={handleChange} required />
         </div>
         <div className="form-group">
-          <label>Password</label>
+          <label>Password (minimum 6 characters)</label>
           <input type="password" name="password" value={formData.password} onChange={handleChange} required />
         </div>
         {formData.role === 'tourist' && (
@@ -146,7 +169,7 @@ function Signup() {
             </div>
             <div className="form-group">
               <label>Price</label>
-              <input type="number" name="price" value={formData.price} onChange={handleChange} required />
+              <input type="number" name="price" value={formData.price} onChange={handleChange} required min="1" />
             </div>
             <div className="form-group">
               <label>Description</label>
