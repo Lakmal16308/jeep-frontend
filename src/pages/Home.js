@@ -55,7 +55,7 @@ function Home() {
   ], []);
 
   useEffect(() => {
-    console.log('Slider initialized. Slides:', slides);
+    console.log(`[${new Date().toISOString()}] Slider initialized. Slides:`, slides);
     slides.forEach(slide => {
       const img = new Image();
       img.src = slide.src;
@@ -65,12 +65,12 @@ function Home() {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => {
         const next = (prev + 1) % slides.length;
-        console.log(`Auto-sliding hero from ${prev} to ${next}`);
+        console.log(`[${new Date().toISOString()}] Auto-sliding hero from ${prev} to ${next}`);
         return next;
       });
     }, 5000);
     return () => {
-      console.log('Clearing hero slider interval');
+      console.log(`[${new Date().toISOString()}] Clearing hero slider interval`);
       clearInterval(interval);
     };
   }, [slides]);
@@ -78,32 +78,36 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Fetching featured providers and reviews...');
+        console.log(`[${new Date().toISOString()}] Fetching featured providers and reviews from ${cleanApiUrl}...`);
         const [providersRes, reviewsRes] = await Promise.all([
           axios.get(`${cleanApiUrl}/api/providers`, { params: { approved: true, limit: 8 } }),
           axios.get(`${cleanApiUrl}/api/reviews/all`).catch(err => {
-            console.warn('Reviews fetch failed:', err.response?.data?.error || err.message);
+            console.warn(`[${new Date().toISOString()}] Reviews fetch failed:`, err.response?.data?.error || err.message);
             return { data: [] };
           })
         ]);
-        console.log('Featured providers:', providersRes.data);
-        console.log('Reviews:', reviewsRes.data);
+        console.log(`[${new Date().toISOString()}] Featured providers:`, providersRes.data);
+        console.log(`[${new Date().toISOString()}] Reviews:`, reviewsRes.data);
         setFeaturedProviders(providersRes.data || []);
         setReviews(reviewsRes.data || []);
       } catch (err) {
-        console.error('Error fetching data:', {
+        console.error(`[${new Date().toISOString()}] Error fetching data:`, {
           message: err.message,
           status: err.response?.status,
           data: err.response?.data,
-          url: err.config?.url
+          url: err.config?.url,
+          apiUrl: cleanApiUrl
         });
+        if (err.message.includes('Network Error')) {
+          console.error('Network error detected. Check CORS configuration and backend accessibility.');
+        }
         setError('Failed to load providers or reviews. Please try again later.');
       }
     };
 
     const fetchUserRoleAndBookings = async () => {
       if (!token) {
-        console.log('No token found, user not logged in');
+        console.log(`[${new Date().toISOString()}] No token found, user not logged in`);
         setUserRole(null);
         setConfirmedProviders([]);
         return;
@@ -113,20 +117,20 @@ function Home() {
           throw new Error('Invalid token format');
         }
         const decoded = JSON.parse(atob(token.split('.')[1]));
-        console.log('Decoded token:', decoded);
+        console.log(`[${new Date().toISOString()}] Decoded token:`, decoded);
         setUserRole(decoded.role);
         if (decoded.role === 'tourist') {
           try {
-            console.log('Fetching bookings for tourist:', decoded.id);
+            console.log(`[${new Date().toISOString()}] Fetching bookings for tourist:`, decoded.id);
             const res = await axios.get(`${cleanApiUrl}/api/bookings/my-bookings`, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            console.log('Raw bookings response:', res.data);
+            console.log(`[${new Date().toISOString()}] Raw bookings response:`, res.data);
             const providers = res.data
               .filter(booking => {
                 const isValid = booking.status === 'confirmed' && 
                                (booking.providerId?._id || booking.productType);
-                console.log('Booking filter:', { 
+                console.log(`[${new Date().toISOString()}] Booking filter:`, { 
                   bookingId: booking._id, 
                   status: booking.status, 
                   providerId: booking.providerId?._id, 
@@ -143,10 +147,10 @@ function Home() {
               .filter((provider, index, self) => 
                 provider.id && self.findIndex(p => p.id === provider.id) === index
               );
-            console.log('Confirmed providers/products:', providers);
+            console.log(`[${new Date().toISOString()}] Confirmed providers/products:`, providers);
             setConfirmedProviders(providers);
           } catch (err) {
-            console.error('Error fetching bookings:', err.response?.data || err.message);
+            console.error(`[${new Date().toISOString()}] Error fetching bookings:`, err.response?.data || err.message);
             if (err.response?.status === 401) {
               localStorage.removeItem('token');
               setError('Session expired. Please log in again.');
@@ -156,10 +160,10 @@ function Home() {
             }
           }
         } else {
-          console.log('User is not a tourist:', decoded.role);
+          console.log(`[${new Date().toISOString()}] User is not a tourist:`, decoded.role);
         }
       } catch (err) {
-        console.error('Error decoding token:', err.message);
+        console.error(`[${new Date().toISOString()}] Error decoding token:`, err.message);
         localStorage.removeItem('token');
         setError('Invalid session. Please log in again.');
         navigate('/login');
@@ -172,7 +176,7 @@ function Home() {
   const prevSlide = () => {
     setCurrentSlide((prev) => {
       const next = prev === 0 ? slides.length - 1 : prev - 1;
-      console.log(`Manual hero slide: prev ${prev} to ${next}`);
+      console.log(`[${new Date().toISOString()}] Manual hero slide: prev ${prev} to ${next}`);
       return next;
     });
   };
@@ -180,20 +184,20 @@ function Home() {
   const nextSlide = () => {
     setCurrentSlide((prev) => {
       const next = (prev + 1) % slides.length;
-      console.log(`Manual hero slide: next ${prev} to ${next}`);
+      console.log(`[${new Date().toISOString()}] Manual hero slide: next ${prev} to ${next}`);
       return next;
     });
   };
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
-    console.log(`Manual hero slide: go to ${index}`);
+    console.log(`[${new Date().toISOString()}] Manual hero slide: go to ${index}`);
   };
 
   const prevServiceSlide = () => {
     setCurrentServiceSlide((prev) => {
       const next = prev === 0 ? 0 : prev - 1;
-      console.log(`Manual service slide: prev ${prev} to ${next}`);
+      console.log(`[${new Date().toISOString()}] Manual service slide: prev ${prev} to ${next}`);
       return next;
     });
   };
@@ -202,7 +206,7 @@ function Home() {
     setCurrentServiceSlide((prev) => {
       const maxSlides = Math.ceil(featuredProviders.length / 4);
       const next = prev === maxSlides - 1 ? prev : prev + 1;
-      console.log(`Manual service slide: next ${prev} to ${next}`);
+      console.log(`[${new Date().toISOString()}] Manual service slide: next ${prev} to ${next}`);
       return next;
     });
   };
@@ -229,18 +233,18 @@ function Home() {
         comment: reviewForm.comment,
         reviewType: selectedProvider?.type || (/^[0-9a-fA-F]{24}$/.test(reviewForm.targetId) ? 'service' : 'product')
       };
-      console.log('Submitting review:', reviewData);
+      console.log(`[${new Date().toISOString()}] Submitting review to ${cleanApiUrl}/api/reviews:`, reviewData);
       const res = await axios.post(`${cleanApiUrl}/api/reviews`, reviewData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('Review submitted:', res.data);
+      console.log(`[${new Date().toISOString()}] Review submitted:`, res.data);
       setReviewSuccess('Review submitted successfully');
       setReviewError(null);
       setReviewForm({ targetId: '', rating: 5, comment: '' });
       const reviewsRes = await axios.get(`${cleanApiUrl}/api/reviews/all`);
       setReviews(reviewsRes.data || []);
     } catch (err) {
-      console.error('Error submitting review:', err.response?.data || err.message);
+      console.error(`[${new Date().toISOString()}] Error submitting review:`, err.response?.data || err.message);
       if (err.response?.status === 401) {
         localStorage.removeItem('token');
         setReviewError('Session expired. Please log in again.');
@@ -268,9 +272,9 @@ function Home() {
                   src={slide.src}
                   alt={slide.alt}
                   className="slide-image"
-                  onLoad={() => console.log(`Image loaded: ${slide.src}`)}
+                  onLoad={() => console.log(`[${new Date().toISOString()}] Image loaded: ${slide.src}`)}
                   onError={(e) => {
-                    console.error(`Failed to load image: ${slide.src}`);
+                    console.error(`[${new Date().toISOString()}] Failed to load image: ${slide.src}`);
                     e.target.src = '/images/placeholder.jpg';
                   }}
                 />
@@ -312,11 +316,11 @@ function Home() {
             {featuredProviders.map((provider) => (
               <div key={provider._id} className="service-card">
                 <img
-                  src={provider.profilePicture ? `${cleanApiUrl}/${provider.profilePicture}` : '/images/placeholder.jpg'}
+                  src={provider.profilePicture ? `${cleanApiUrl}/uploads/${provider.profilePicture}` : '/images/placeholder.jpg'}
                   alt={provider.serviceName}
                   className="service-image"
                   onError={(e) => {
-                    console.error(`Failed to load image: ${cleanApiUrl}/${provider.profilePicture}`);
+                    console.error(`[${new Date().toISOString()}] Failed to load image: ${cleanApiUrl}/uploads/${provider.profilePicture}`);
                     e.target.src = '/images/placeholder.jpg';
                   }}
                 />

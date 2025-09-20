@@ -42,7 +42,7 @@ function Signup() {
     } else {
       setFormData({ ...formData, [name]: value });
     }
-    setError(null); // Clear error on input change
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
@@ -51,7 +51,6 @@ function Signup() {
     setError(null);
 
     try {
-      // Validate password length
       if (formData.password.length < 6) {
         throw new Error('Password must be at least 6 characters');
       }
@@ -114,8 +113,13 @@ function Signup() {
       console.error(`[${new Date().toISOString()}] Signup error:`, {
         message: err.message,
         response: err.response?.data,
-        status: err.response?.status
+        status: err.response?.status,
+        url: err.config?.url,
+        apiUrl: cleanApiUrl
       });
+      if (err.message.includes('Network Error')) {
+        console.error('Network error detected. Check if REACT_APP_API_URL is set correctly and backend is accessible.');
+      }
       setError(err.response?.data?.error || err.message || 'Failed to sign up. Please try again.');
     } finally {
       setLoading(false);
