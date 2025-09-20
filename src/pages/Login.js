@@ -22,7 +22,11 @@ function Login() {
     setError(null);
 
     try {
-      console.log(`[${new Date().toISOString()}] Sending login request:`, {
+      if (!formData.email || !formData.password) {
+        throw new Error('Email and password are required');
+      }
+
+      console.log(`[${new Date().toISOString()}] Sending login request to ${cleanApiUrl}/api/auth/login:`, {
         email: formData.email,
         role: formData.role
       });
@@ -44,9 +48,10 @@ function Login() {
     } catch (err) {
       console.error(`[${new Date().toISOString()}] Login error:`, {
         message: err.message,
-        response: err.response?.data
+        response: err.response?.data,
+        status: err.response?.status
       });
-      setError(err.response?.data?.error || 'Failed to log in. Please try again.');
+      setError(err.response?.data?.error || err.message || 'Failed to log in. Please try again.');
     } finally {
       setLoading(false);
     }

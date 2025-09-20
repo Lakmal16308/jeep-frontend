@@ -30,6 +30,9 @@ function Signup() {
     'Village Lunch'
   ];
 
+  const apiUrl = process.env.REACT_APP_API_URL || 'https://jeep-ten.vercel.app';
+  const cleanApiUrl = apiUrl.replace(/\/+$/, '');
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'profilePicture') {
@@ -58,6 +61,9 @@ function Signup() {
       let data;
 
       if (formData.role === 'tourist') {
+        if (!formData.fullName || !formData.email || !formData.country) {
+          throw new Error('Full name, email, and country are required');
+        }
         data = {
           fullName: formData.fullName,
           email: formData.email,
@@ -65,6 +71,9 @@ function Signup() {
           country: formData.country
         };
       } else {
+        if (!formData.serviceName || !formData.contact || !formData.category || !formData.location || !formData.price || !formData.description) {
+          throw new Error('All provider fields are required');
+        }
         if (!formData.profilePicture || formData.photos.length === 0) {
           throw new Error('Profile picture and at least one photo are required for providers');
         }
@@ -91,13 +100,11 @@ function Signup() {
         formData.photos.forEach((photo) => data.append('photos', photo));
       }
 
-      const formDataEntries = formData.role === 'tourist' 
-        ? data 
+      const formDataEntries = formData.role === 'tourist'
+        ? data
         : Object.fromEntries([...data.entries()].map(([key, value]) => [key, value instanceof File ? value.name : value]));
-      console.log(`[${new Date().toISOString()}] Sending signup request:`, JSON.stringify(formDataEntries, null, 2));
+      console.log(`[${new Date().toISOString()}] Sending signup request to ${cleanApiUrl}${endpoint}:`, JSON.stringify(formDataEntries, null, 2));
 
-      const apiUrl = process.env.REACT_APP_API_URL || 'https://jeep-ten.vercel.app';
-      const cleanApiUrl = apiUrl.replace(/\/+$/, '');
       const res = await axios.post(`${cleanApiUrl}${endpoint}`, data, { headers });
       console.log(`[${new Date().toISOString()}] Signup response:`, JSON.stringify(res.data, null, 2));
 
@@ -106,7 +113,8 @@ function Signup() {
     } catch (err) {
       console.error(`[${new Date().toISOString()}] Signup error:`, {
         message: err.message,
-        response: err.response?.data
+        response: err.response?.data,
+        status: err.response?.status
       });
       setError(err.response?.data?.error || err.message || 'Failed to sign up. Please try again.');
     } finally {
