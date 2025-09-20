@@ -45,8 +45,8 @@ function Signup() {
     setLoading(true);
 
     try {
-      let endpoint = formData.role === 'tourist' ? '/api/auth/tourist/signup' : '/api/auth/provider/signup';
-      let headers = formData.role === 'tourist' ? { 'Content-Type': 'application/json' } : { 'Content-Type': 'multipart/form-data' };
+      const endpoint = formData.role === 'tourist' ? '/api/auth/tourist/signup' : '/api/auth/provider/signup';
+      const headers = formData.role === 'tourist' ? { 'Content-Type': 'application/json' } : { 'Content-Type': 'multipart/form-data' };
       let data;
 
       if (formData.role === 'tourist') {
@@ -74,13 +74,14 @@ function Signup() {
         formData.photos.forEach((photo) => data.append('photos', photo));
       }
 
-      // Improved logging for debugging
       const formDataEntries = formData.role === 'tourist' 
         ? data 
         : Object.fromEntries([...data.entries()].map(([key, value]) => [key, value instanceof File ? value.name : value]));
       console.log('Sending signup request:', JSON.stringify(formDataEntries, null, 2));
 
-      const res = await axios.post(`http://localhost:5000${endpoint}`, data, { headers });
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://jeep-ten.vercel.app';
+      const cleanApiUrl = apiUrl.replace(/\/+$/, '');
+      const res = await axios.post(`${cleanApiUrl}${endpoint}`, data, { headers });
       console.log('Signup response:', JSON.stringify(res.data, null, 2));
       localStorage.setItem('token', res.data.token);
       navigate(formData.role === 'tourist' ? '/tourist-dashboard' : '/provider-dashboard');
