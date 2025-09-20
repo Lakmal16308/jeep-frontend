@@ -19,5 +19,8 @@
         }
       ]
     }
-  ]
+  ],
+  "protection": {
+    "enabled": false
+  }
 }
