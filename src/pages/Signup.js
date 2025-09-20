@@ -52,7 +52,7 @@ function Signup() {
       if (formData.role === 'tourist') {
         data = {
           fullName: formData.fullName,
-          email: formData.email, // Fixed typo: FormData.email -> formData.email
+          email: formData.email,
           password: formData.password,
           country: formData.country
         };

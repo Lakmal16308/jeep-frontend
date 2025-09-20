@@ -82,7 +82,7 @@ function Home() {
         const [providersRes, reviewsRes] = await Promise.all([
           axios.get(`${cleanApiUrl}/api/providers`, { params: { approved: true, limit: 8 } }),
           axios.get(`${cleanApiUrl}/api/reviews/all`).catch(err => {
-            console.warn('Reviews fetch failed:', err.response?.data || err.message);
+            console.warn('Reviews fetch failed:', err.response?.data?.error || err.message);
             return { data: [] };
           })
         ]);
@@ -91,7 +91,12 @@ function Home() {
         setFeaturedProviders(providersRes.data || []);
         setReviews(reviewsRes.data || []);
       } catch (err) {
-        console.error('Error fetching data:', err.response?.data || err.message);
+        console.error('Error fetching data:', {
+          message: err.message,
+          status: err.response?.status,
+          data: err.response?.data,
+          url: err.config?.url
+        });
         setError('Failed to load providers or reviews. Please try again later.');
       }
     };
