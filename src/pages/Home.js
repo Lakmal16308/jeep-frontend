@@ -24,6 +24,10 @@ function Home() {
   const [userRole, setUserRole] = useState(null);
   const token = localStorage.getItem('token');
 
+  // Define apiUrl and cleanApiUrl at component level
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const cleanApiUrl = apiUrl.replace(/\/+$/, '');
+
   const slides = useMemo(() => [
     {
       src: '/images/jeep_safari.jpg',
@@ -73,9 +77,6 @@ function Home() {
   }, [slides]);
 
   useEffect(() => {
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    const cleanApiUrl = apiUrl.replace(/\/+$/, '');
-
     const fetchData = async () => {
       try {
         console.log('Fetching featured providers and reviews...');
@@ -162,7 +163,7 @@ function Home() {
     };
 
     Promise.all([fetchData(), fetchUserRoleAndBookings()]).finally(() => setLoading(false));
-  }, [token, navigate]);
+  }, [token, navigate, cleanApiUrl]);
 
   const prevSlide = () => {
     setCurrentSlide((prev) => {
@@ -208,8 +209,6 @@ function Home() {
   };
 
   const handleReviewSubmit = async () => {
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    const cleanApiUrl = apiUrl.replace(/\/+$/, '');
     if (!token) {
       setReviewError('Please log in to submit a review');
       return;
