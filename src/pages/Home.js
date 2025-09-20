@@ -24,9 +24,6 @@ function Home() {
   const [userRole, setUserRole] = useState(null);
   const token = localStorage.getItem('token');
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-  const cleanApiUrl = apiUrl.replace(/\/+$/, '');
-
   const slides = useMemo(() => [
     {
       src: '/images/jeep_safari.jpg',
@@ -56,7 +53,6 @@ function Home() {
 
   useEffect(() => {
     console.log('Slider initialized. Slides:', slides);
-    // Preload images to ensure they load correctly
     slides.forEach(slide => {
       const img = new Image();
       img.src = slide.src;
@@ -77,6 +73,9 @@ function Home() {
   }, [slides]);
 
   useEffect(() => {
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const cleanApiUrl = apiUrl.replace(/\/+$/, '');
+
     const fetchData = async () => {
       try {
         console.log('Fetching featured providers and reviews...');
@@ -163,7 +162,7 @@ function Home() {
     };
 
     Promise.all([fetchData(), fetchUserRoleAndBookings()]).finally(() => setLoading(false));
-  }, [token, navigate, cleanApiUrl]);
+  }, [token, navigate]);
 
   const prevSlide = () => {
     setCurrentSlide((prev) => {
@@ -209,6 +208,8 @@ function Home() {
   };
 
   const handleReviewSubmit = async () => {
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const cleanApiUrl = apiUrl.replace(/\/+$/, '');
     if (!token) {
       setReviewError('Please log in to submit a review');
       return;
