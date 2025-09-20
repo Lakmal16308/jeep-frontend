@@ -13,7 +13,7 @@ function Login() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(null); // Clear error on input change
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
@@ -49,8 +49,13 @@ function Login() {
       console.error(`[${new Date().toISOString()}] Login error:`, {
         message: err.message,
         response: err.response?.data,
-        status: err.response?.status
+        status: err.response?.status,
+        url: err.config?.url,
+        apiUrl: cleanApiUrl
       });
+      if (err.message.includes('Network Error')) {
+        console.error('Network error detected. Check if REACT_APP_API_URL is set correctly and backend is accessible.');
+      }
       setError(err.response?.data?.error || err.message || 'Failed to log in. Please try again.');
     } finally {
       setLoading(false);
@@ -81,7 +86,7 @@ function Login() {
           />
         </div>
         <div className="form-group">
-          <label>Password</label>
+          <label>Password (minimum 6 characters)</label>
           <input
             type="password"
             name="password"

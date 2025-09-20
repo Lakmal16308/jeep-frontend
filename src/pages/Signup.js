@@ -51,6 +51,7 @@ function Signup() {
     setError(null);
 
     try {
+      console.log(`[${new Date().toISOString()}] Using API URL: ${cleanApiUrl}`);
       if (formData.password.length < 6) {
         throw new Error('Password must be at least 6 characters');
       }
@@ -118,7 +119,7 @@ function Signup() {
         apiUrl: cleanApiUrl
       });
       if (err.message.includes('Network Error')) {
-        console.error('Network error detected. Check if REACT_APP_API_URL is set correctly and backend is accessible.');
+        console.error('Network error detected. Check if REACT_APP_API_URL is set correctly in Vercel dashboard or .env file.');
       }
       setError(err.response?.data?.error || err.message || 'Failed to sign up. Please try again.');
     } finally {
@@ -147,7 +148,7 @@ function Signup() {
           <input type="email" name="email" value={formData.email} onChange={handleChange} required />
         </div>
         <div className="form-group">
-          <label>Password (minimum 6 characters)</label>
+          <label>Password (minimum 6 characters, e.g., password123)</label>
           <input type="password" name="password" value={formData.password} onChange={handleChange} required />
         </div>
         {formData.role === 'tourist' && (
