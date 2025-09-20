@@ -24,7 +24,6 @@ function Home() {
   const [userRole, setUserRole] = useState(null);
   const token = localStorage.getItem('token');
 
-  // Define apiUrl and cleanApiUrl at component level
   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
   const cleanApiUrl = apiUrl.replace(/\/+$/, '');
 
@@ -57,6 +56,7 @@ function Home() {
 
   useEffect(() => {
     console.log('Slider initialized. Slides:', slides);
+    // Preload images to ensure they load correctly
     slides.forEach(slide => {
       const img = new Image();
       img.src = slide.src;
